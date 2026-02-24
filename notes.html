@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Study Tracker — BCD202</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --border: #1e3a5f;
+    --done: #10b981;
+    --glow: 0 0 20px rgba(0,212,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated bg */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0,212,255,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.03) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left .course-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-size: clamp(24px, 4vw, 42px);
+    font-weight: 700;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e2e8f0 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .meta-tag {
+    font-size: 12px;
+    color: var(--text3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* OVERALL PROGRESS */
+  .overall-progress {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    box-shadow: var(--glow);
+  }
+
+  .progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .progress-title {
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    color: var(--text2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .progress-pct {
+    font-family: 'Space Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 8px;
+    height: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 0 12px rgba(0,212,255,0.4);
+  }
+
+  .progress-stats {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text3);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .tab:hover { color: var(--text); background: var(--surface2); }
+
+  .tab.active {
+    background: var(--surface3);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(0,212,255,0.1);
+  }
+
+  /* UNIT SECTION */
+  .unit-section { margin-bottom: 24px; }
+
+  .unit-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+    padding: 20px 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+  }
+
+  .unit-header:hover { background: var(--surface2); }
+
+  .unit-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .unit-icon.u1 { background: linear-gradient(135deg, #7c3aed22, #7c3aed44); border: 1px solid #7c3aed55; }
+  .unit-icon.u2 { background: linear-gradient(135deg, #00d4ff22, #00d4ff44); border: 1px solid #00d4ff55; }
+  .unit-icon.roadmap { background: linear-gradient(135deg, #10b98122, #10b98144); border: 1px solid #10b98155; }
+
+  .unit-title-block { flex: 1; }
+
+  .unit-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .unit-subtitle {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 3px;
+  }
+
+  .unit-progress-mini {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .unit-pct-mini {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    min-width: 38px;
+    text-align: right;
+  }
+
+  .mini-bar {
+    width: 80px;
+    height: 6px;
+    background: var(--surface3);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 0.5s ease;
+  }
+
+  .chevron {
+    color: var(--text3);
+    font-size: 18px;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .chevron.open { transform: rotate(180deg); }
+
+  .unit-body {
+    display: none;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    overflow: hidden;
+  }
+
+  .unit-body.open { display: block; }
+
+  /* TOPIC */
+  .topic {
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .topic:last-child { border-bottom: none; }
+
+  .topic-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 24px;
+    cursor: pointer;
+    transition: background 0.15s;
+    background: var(--surface);
+  }
+
+  .topic-header:hover { background: var(--surface2); }
+
+  .topic-check {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .topic-check.checked {
+    background: var(--accent3);
+    border-color: var(--accent3);
+    color: white;
+  }
+
+  .topic-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+
+  .topic-name.done { color: var(--text3); text-decoration: line-through; }
+
+  .topic-expand {
+    font-size: 12px;
+    color: var(--text3);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 20px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .topic-header:hover .topic-expand {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* NOTES PANEL */
+  .notes-panel {
+    display: none;
+    background: var(--surface2);
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .notes-panel.open { display: block; }
+
+  .notes-inner {
+    padding: 24px 32px 28px;
+  }
+
+  .notes-inner h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .note-content p {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text2);
+    margin-bottom: 14px;
+  }
+
+  .note-content strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .note-content .highlight-box {
+    background: rgba(0,212,255,0.05);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 14px 0;
+    font-size: 13px;
+    color: var(--text2);
+    font-style: italic;
+  }
+
+  .note-content .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: #7dd3fc;
+    margin: 14px 0;
+    overflow-x: auto;
+    line-height: 1.7;
+    white-space: pre;
+  }
+
+  .note-content .tip-box {
+    background: rgba(245,158,11,0.07);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+    color: #fcd34d;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .note-content .tip-box::before { content: '💡'; flex-shrink: 0; }
+
+  .subtopics-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .subtopic-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .subtopic-item:hover { border-color: var(--accent2); }
+
+  .subtopic-check {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1px;
+    font-size: 10px;
+  }
+
+  .subtopic-check.checked {
+    background: var(--accent3);
+    border-color: var(--accent3);
+    color: white;
+  }
+
+  .subtopic-text {
+    flex: 1;
+  }
+
+  .subtopic-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    transition: color 0.2s;
+  }
+
+  .subtopic-title.done { color: var(--text3); text-decoration: line-through; }
+
+  .subtopic-desc {
+    font-size: 12px;
+    color: var(--text3);
+    line-height: 1.5;
+  }
+
+  /* ROADMAP TAB */
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 24px;
+  }
+
+  .week-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .week-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .week-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .week-card:hover::before { opacity: 1; }
+
+  .week-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .week-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .week-topics-list {
+    list-style: none;
+    margin-bottom: 14px;
+  }
+
+  .week-topics-list li {
+    font-size: 12px;
+    color: var(--text3);
+    padding: 3px 0;
+    padding-left: 12px;
+    position: relative;
+  }
+
+  .week-topics-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 10px;
+  }
+
+  .week-yt {
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .week-yt::before { content: '▶'; color: #ef4444; flex-shrink: 0; }
+
+  /* YOUTUBE SECTION */
+  .yt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    padding: 24px;
+  }
+
+  .yt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    transition: border-color 0.2s;
+  }
+
+  .yt-card:hover { border-color: #ef4444; }
+
+  .yt-icon { font-size: 24px; margin-bottom: 10px; }
+
+  .yt-channel {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .yt-topic {
+    font-size: 11px;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 8px;
+  }
+
+  .yt-search {
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--surface2);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    word-break: break-word;
+  }
+
+  /* RESET BTN */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .reset-btn:hover { background: var(--danger); color: white; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface3);
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* MOBILE */
+  @media (max-width: 600px) {
+    .container { padding: 0 14px; }
+    .notes-inner { padding: 18px 18px 22px; }
+    h1 { font-size: 26px; }
+    .unit-header { padding: 16px 16px; }
+    .topic-header { padding: 14px 16px; }
+    .mini-bar { width: 50px; }
+    .roadmap-grid { padding: 16px; }
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="course-badge">BCD202 · Sem 2 · Science & Technology</div>
+        <h1>Database Management<br>System</h1>
+        <div class="header-meta">
+          <span class="meta-tag">2 Credits</span>
+          <span class="meta-tag">50 Marks</span>
+          <span class="meta-tag">30 Hours</span>
+          <span class="meta-tag">Level 4.5</span>
+        </div>
+      </div>
+      <button class="reset-btn" onclick="resetProgress()">↺ RESET</button>
+    </div>
+  </header>
+
+  <!-- OVERALL PROGRESS -->
+  <div class="overall-progress">
+    <div class="progress-header">
+      <div class="progress-title">Overall Progress</div>
+      <div class="progress-pct" id="overall-pct">0%</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="overall-bar" style="width:0%"></div>
+    </div>
+    <div class="progress-stats">
+      <div class="stat"><div class="stat-num" id="stat-done">0</div><div class="stat-label">Done</div></div>
+      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Topics</div></div>
+      <div class="stat"><div class="stat-num" id="stat-sub-done">0</div><div class="stat-label">Subtopics ✓</div></div>
+      <div class="stat"><div class="stat-num" id="stat-sub-total">0</div><div class="stat-label">Subtopics</div></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('notes', this)">📚 Study Notes</button>
+    <button class="tab" onclick="switchTab('roadmap', this)">🗓 Roadmap</button>
+    <button class="tab" onclick="switchTab('youtube', this)">▶ YouTube</button>
+  </div>
+
+  <!-- NOTES TAB -->
+  <div id="tab-notes" class="tab-content active">
+    <div id="units-container"></div>
+  </div>
+
+  <!-- ROADMAP TAB -->
+  <div id="tab-roadmap" class="tab-content">
+    <div class="roadmap-grid" id="roadmap-container"></div>
+  </div>
+
+  <!-- YOUTUBE TAB -->
+  <div id="tab-youtube" class="tab-content">
+    <div class="yt-grid" id="yt-container"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== DATA =====================
+const curriculum = [
+  {
+    id: "unit1",
+    title: "Unit 1 — Introduction, ER Model & Normalization",
+    subtitle: "Foundations of databases, modelling and design",
+    icon: "🗄",
+    iconClass: "u1",
+    hours: "15 Hours",
+    topics: [
+      {
+        id: "intro",
+        name: "Introduction to Databases",
+        notes: `
+          <p><strong>What is Data?</strong> Raw, unprocessed facts with no context — like <em>90</em>, <em>John</em>, <em>2024</em>.</p>
+          <p><strong>What is Information?</strong> Data that has been processed and given meaning — like <em>"John scored 90 marks in DBMS in 2024."</em></p>
+          <p><strong>What is a Database?</strong> An organised collection of related data stored electronically so it can be easily accessed, managed, and updated.</p>
+          <p><strong>What is a DBMS?</strong> Database Management System — software that manages databases. It sits between users and the actual stored data.</p>
+          <div class="highlight-box">Think of a DBMS like a librarian who organises, finds, and manages books for you — you don't go digging through shelves yourself.</div>
+          <p><strong>Popular DBMS software:</strong> MySQL, Oracle, PostgreSQL, Microsoft SQL Server, SQLite, MongoDB.</p>
+          <div class="tip-box">Data → Process (DBMS) → Information. Always remember this flow!</div>
+        `,
+        subtopics: [
+          { id: "intro-1", title: "Data vs Information", desc: "Understand the difference with real examples" },
+          { id: "intro-2", title: "What is a Database?", desc: "Definition, real-world analogy, types of storage" },
+          { id: "intro-3", title: "What is DBMS?", desc: "Role of DBMS, how it works as middleware" },
+          { id: "intro-4", title: "Advantages of DBMS", desc: "Reduced redundancy, consistency, security, sharing, independence, backup" },
+          { id: "intro-5", title: "Types of Databases", desc: "Relational, NoSQL, Hierarchical, Network, Cloud, Distributed" },
+        ]
+      },
+      {
+        id: "er-model",
+        name: "Entity-Relationship (ER) Model",
+        notes: `
+          <p>The <strong>ER Model</strong> is a visual technique for designing a database before you actually build it. It maps out <em>what</em> data you need and <em>how</em> different pieces of data relate to each other.</p>
+          <p><strong>Entity:</strong> A real-world "thing" we want to store data about. Examples: Student, Course, Teacher, Product.</p>
+          <p><strong>Attribute:</strong> A property or characteristic of an entity. Example: Student has name, age, roll_number.</p>
+          <p><strong>Relationship:</strong> How two entities are connected. Example: Student ENROLLS IN Course.</p>
+          <div class="highlight-box">ER Diagram Shapes: Rectangle = Entity | Ellipse = Attribute | Diamond = Relationship | Double ellipse = Multi-valued | Dashed ellipse = Derived attribute</div>
+          <p><strong>Types of Attributes:</strong></p>
+          <p>• <strong>Simple:</strong> Cannot be broken down — e.g., age, roll_no<br>
+          • <strong>Composite:</strong> Can be broken down — e.g., name → first_name + last_name<br>
+          • <strong>Multi-valued:</strong> Multiple values — e.g., phone_numbers {9876, 8765}<br>
+          • <strong>Derived:</strong> Calculated from other attributes — e.g., age from date_of_birth<br>
+          • <strong>Key Attribute:</strong> Uniquely identifies entity — shown with underline in ER diagram</p>
+          <p><strong>Cardinality (how many of each entity participate):</strong></p>
+          <p>• <strong>1:1</strong> — One person has one passport<br>
+          • <strong>1:N</strong> — One teacher teaches many students<br>
+          • <strong>M:N</strong> — Many students enroll in many courses</p>
+          <div class="tip-box">Always draw the ER diagram first, then convert it to tables. Practice with: Library system, Hospital system, School system.</div>
+        `,
+        subtopics: [
+          { id: "er-1", title: "Entities and Entity Sets", desc: "Strong vs weak entities, entity sets" },
+          { id: "er-2", title: "Attributes (all types)", desc: "Simple, Composite, Multi-valued, Derived, Key" },
+          { id: "er-3", title: "Relationships", desc: "Binary, ternary relationships; participation constraints" },
+          { id: "er-4", title: "Cardinality (1:1, 1:N, M:N)", desc: "With examples for each" },
+          { id: "er-5", title: "Drawing ER Diagrams", desc: "Practice converting a problem statement into an ER diagram" },
+          { id: "er-6", title: "Enhanced ER Model (EER)", desc: "Generalisation, Specialisation, Aggregation" },
+        ]
+      },
+      {
+        id: "relational",
+        name: "Relational Database Design",
+        notes: `
+          <p>After creating an ER diagram, we convert it into actual <strong>relational tables</strong> (also called relations).</p>
+          <p><strong>Relation (Table):</strong> A 2D structure with rows (tuples) and columns (attributes).</p>
+          <p><strong>Primary Key:</strong> A column (or set of columns) that uniquely identifies each row. Example: roll_number in a Students table.</p>
+          <p><strong>Foreign Key:</strong> A column in one table that references the primary key of another table — used to link tables together.</p>
+          <div class="code-block">Students Table:
+| roll_no | name  | dept_id |
+|---------|-------|---------|
+|   101   | John  |    3    |
+|   102   | Priya |    1    |
+
+Departments Table:
+| dept_id | dept_name |
+|---------|-----------|
+|    1    | Science   |
+|    3    | Commerce  |</div>
+          <p><strong>Rules for converting ER to Relational:</strong></p>
+          <p>• Each strong entity becomes a table<br>
+          • Each attribute becomes a column<br>
+          • M:N relationships get a separate table (junction/bridge table)<br>
+          • 1:N relationship: add foreign key to the "many" side</p>
+          <div class="tip-box">UML diagrams are also used to represent database design. A UML class diagram looks similar to an ER diagram but uses OOP notation.</div>
+        `,
+        subtopics: [
+          { id: "rel-1", title: "Tables, Rows, Columns", desc: "Relations, tuples, attributes — terminology" },
+          { id: "rel-2", title: "Primary Key & Foreign Key", desc: "How they work and why they are important" },
+          { id: "rel-3", title: "Converting ER to Tables", desc: "Rules for 1:1, 1:N, M:N, and weak entities" },
+          { id: "rel-4", title: "UML Class Diagrams", desc: "Representing DB design using UML notation" },
+        ]
+      },
+      {
+        id: "normalization",
+        name: "Normalization (1NF to BCNF)",
+        notes: `
+          <p><strong>Normalization</strong> is the process of organising a database to eliminate redundancy (duplicate data) and ensure data integrity.</p>
+          <p><strong>Why normalize?</strong> Without normalization, databases suffer from:</p>
+          <p>• <em>Insertion anomaly</em> — can't add data without other data existing<br>
+          • <em>Deletion anomaly</em> — deleting a row loses important related info<br>
+          • <em>Update anomaly</em> — updating one row creates inconsistency elsewhere</p>
+          <p><strong>Functional Dependency:</strong> If attribute A determines attribute B, we write A → B (A functionally determines B).</p>
+          <div class="highlight-box">1NF → 2NF → 3NF → BCNF — each level builds on the previous one!</div>
+          <p><strong>First Normal Form (1NF):</strong><br>
+          • All column values must be atomic (no lists, no sets in a cell)<br>
+          • No duplicate rows (primary key required)<br>
+          • ❌ Violation: Storing "Math, Science" in one cell<br>
+          • ✅ Fix: One subject per row</p>
+          <p><strong>Second Normal Form (2NF):</strong><br>
+          • Must be in 1NF<br>
+          • No partial dependency: every non-key column must depend on the ENTIRE primary key<br>
+          • Applies only when primary key is composite (multiple columns)<br>
+          • If StudentID + CourseID is the key, and StudentName depends only on StudentID → partial dependency → violates 2NF</p>
+          <p><strong>Third Normal Form (3NF):</strong><br>
+          • Must be in 2NF<br>
+          • No transitive dependency: non-key column must NOT depend on another non-key column<br>
+          • If A → B → C, then C must be moved to a separate table</p>
+          <p><strong>Boyce-Codd Normal Form (BCNF):</strong><br>
+          • Stricter version of 3NF<br>
+          • For every functional dependency X → Y, X must be a superkey<br>
+          • All anomalies BCNF resolves that 3NF might miss</p>
+          <div class="code-block">BCNF Check: For every A → B, is A a superkey?
+If yes → BCNF ✅
+If no  → Not in BCNF ❌ (decompose the table)</div>
+          <div class="tip-box">Memory trick: 1NF = Atomic | 2NF = No Partial | 3NF = No Transitive | BCNF = Every determinant is a superkey</div>
+        `,
+        subtopics: [
+          { id: "norm-1", title: "Why Normalization? Anomalies", desc: "Insertion, deletion, and update anomalies" },
+          { id: "norm-2", title: "Functional Dependencies", desc: "A → B notation, superkey, candidate key" },
+          { id: "norm-3", title: "First Normal Form (1NF)", desc: "Atomic values, no repeating groups" },
+          { id: "norm-4", title: "Second Normal Form (2NF)", desc: "Remove partial dependencies" },
+          { id: "norm-5", title: "Third Normal Form (3NF)", desc: "Remove transitive dependencies" },
+          { id: "norm-6", title: "BCNF", desc: "Every determinant must be a superkey" },
+          { id: "norm-7", title: "Denormalization", desc: "When and why to reverse normalization for performance" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "unit2",
+    title: "Unit 2 — SQL, Advanced SQL & Transactions",
+    subtitle: "Querying, manipulating, and managing database transactions",
+    icon: "💾",
+    iconClass: "u2",
+    hours: "15 Hours",
+    topics: [
+      {
+        id: "sql-basics",
+        name: "Introduction to SQL & Basic SELECT",
+        notes: `
+          <p><strong>SQL (Structured Query Language)</strong> is the standard language for working with relational databases. It lets you create, read, update, and delete data.</p>
+          <p><strong>SQL Categories:</strong><br>
+          • <strong>DDL</strong> (Data Definition Language) — CREATE, ALTER, DROP, TRUNCATE<br>
+          • <strong>DML</strong> (Data Manipulation Language) — INSERT, UPDATE, DELETE<br>
+          • <strong>DQL</strong> (Data Query Language) — SELECT<br>
+          • <strong>DCL</strong> (Data Control Language) — GRANT, REVOKE<br>
+          • <strong>TCL</strong> (Transaction Control Language) — COMMIT, ROLLBACK, SAVEPOINT</p>
+          <p><strong>Basic SELECT Syntax:</strong></p>
+          <div class="code-block">SELECT column1, column2
+FROM table_name
+WHERE condition
+ORDER BY column ASC;
+
+-- Select all columns
+SELECT * FROM students;
+
+-- Select with condition
+SELECT name, marks FROM students WHERE marks > 60;
+
+-- Sort results
+SELECT * FROM students ORDER BY name ASC;
+SELECT * FROM students ORDER BY marks DESC;</div>
+          <p><strong>Aggregate Functions:</strong></p>
+          <div class="code-block">SELECT COUNT(*) FROM students;             -- Total rows
+SELECT SUM(marks) FROM students;           -- Total marks
+SELECT AVG(marks) FROM students;           -- Average marks
+SELECT MAX(marks), MIN(marks) FROM students;  -- Highest and lowest
+
+-- Group + Having
+SELECT dept, AVG(marks) AS avg_marks
+FROM students
+GROUP BY dept
+HAVING AVG(marks) > 70;</div>
+          <div class="tip-box">HAVING is like WHERE but for GROUP BY. WHERE filters rows before grouping; HAVING filters after grouping.</div>
+        `,
+        subtopics: [
+          { id: "sql-1", title: "DDL / DML / DCL / TCL Overview", desc: "Know which commands belong to which category" },
+          { id: "sql-2", title: "SELECT, FROM, WHERE", desc: "Basic query structure with conditions" },
+          { id: "sql-3", title: "ORDER BY, DISTINCT", desc: "Sorting and removing duplicates" },
+          { id: "sql-4", title: "Aggregate Functions", desc: "COUNT, SUM, AVG, MAX, MIN" },
+          { id: "sql-5", title: "GROUP BY and HAVING", desc: "Grouping data and filtering groups" },
+        ]
+      },
+      {
+        id: "sql-joins",
+        name: "SQL Joins & Subqueries",
+        notes: `
+          <p><strong>Joins</strong> combine rows from two or more tables based on a matching column (usually a foreign key).</p>
+          <div class="code-block">-- INNER JOIN: only rows that match in BOTH tables
+SELECT s.name, c.course_name
+FROM students s
+INNER JOIN courses c ON s.course_id = c.id;
+
+-- LEFT JOIN: all rows from students + matched courses
+SELECT s.name, c.course_name
+FROM students s
+LEFT JOIN courses c ON s.course_id = c.id;
+
+-- RIGHT JOIN: all rows from courses + matched students
+SELECT s.name, c.course_name
+FROM students s
+RIGHT JOIN courses c ON s.course_id = c.id;
+
+-- FULL OUTER JOIN: all rows from both tables
+SELECT s.name, c.course_name
+FROM students s
+FULL OUTER JOIN courses c ON s.course_id = c.id;</div>
+          <p><strong>Subqueries</strong> — a query nested inside another query:</p>
+          <div class="code-block">-- Find students who scored above average
+SELECT name FROM students
+WHERE marks > (SELECT AVG(marks) FROM students);
+
+-- Subquery in FROM clause (derived table)
+SELECT dept, avg_marks FROM
+  (SELECT dept, AVG(marks) AS avg_marks FROM students GROUP BY dept) AS dept_avg
+WHERE avg_marks > 75;</div>
+          <div class="tip-box">INNER JOIN = Venn diagram intersection. LEFT JOIN = Full left circle. RIGHT JOIN = Full right circle. FULL JOIN = Both circles combined.</div>
+        `,
+        subtopics: [
+          { id: "join-1", title: "INNER JOIN", desc: "Only matching rows from both tables" },
+          { id: "join-2", title: "LEFT and RIGHT JOIN", desc: "All rows from one side + matches from the other" },
+          { id: "join-3", title: "FULL OUTER JOIN & CROSS JOIN", desc: "All rows, and cartesian product" },
+          { id: "join-4", title: "Subqueries (WHERE clause)", desc: "Nested queries in conditions" },
+          { id: "join-5", title: "Subqueries (FROM clause)", desc: "Derived tables / inline views" },
+          { id: "join-6", title: "Correlated Subqueries", desc: "Subqueries that reference the outer query" },
+        ]
+      },
+      {
+        id: "adv-sql",
+        name: "Advanced SQL — DDL, Views & Functions",
+        notes: `
+          <p><strong>Creating and Modifying Tables:</strong></p>
+          <div class="code-block">-- Create table with constraints
+CREATE TABLE students (
+  id       INT PRIMARY KEY,
+  name     VARCHAR(50) NOT NULL,
+  age      INT CHECK (age > 0),
+  email    VARCHAR(100) UNIQUE,
+  dept_id  INT REFERENCES departments(id)
+);
+
+-- Add a column
+ALTER TABLE students ADD COLUMN phone VARCHAR(15);
+
+-- Remove a column
+ALTER TABLE students DROP COLUMN age;
+
+-- Drop entire table
+DROP TABLE students;</div>
+          <p><strong>INSERT, UPDATE, DELETE:</strong></p>
+          <div class="code-block">INSERT INTO students VALUES (101, 'Priya', 20, 'p@x.com', 3);
+
+UPDATE students SET age = 21 WHERE id = 101;
+
+DELETE FROM students WHERE id = 101;</div>
+          <p><strong>Views</strong> — a saved virtual table based on a SELECT query:</p>
+          <div class="code-block">-- Create a view
+CREATE VIEW top_students AS
+SELECT name, marks FROM students WHERE marks >= 80;
+
+-- Use the view like a table
+SELECT * FROM top_students;
+
+-- Drop the view
+DROP VIEW top_students;</div>
+          <p><strong>Views are used to:</strong> Simplify complex queries, restrict access to sensitive data, present data in a custom format.</p>
+          <div class="tip-box">A view doesn't store data — it stores the query. Every time you SELECT from a view, the query runs fresh.</div>
+        `,
+        subtopics: [
+          { id: "adv-1", title: "CREATE TABLE with Constraints", desc: "PRIMARY KEY, FOREIGN KEY, NOT NULL, UNIQUE, CHECK" },
+          { id: "adv-2", title: "ALTER TABLE, DROP TABLE", desc: "Modifying and deleting table structures" },
+          { id: "adv-3", title: "INSERT, UPDATE, DELETE", desc: "DML commands with conditions" },
+          { id: "adv-4", title: "Views — CREATE VIEW", desc: "Virtual tables, benefits, DROP VIEW" },
+          { id: "adv-5", title: "Sequences", desc: "Auto-incrementing numbers for primary keys" },
+          { id: "adv-6", title: "Stored Procedures & Functions", desc: "Reusable SQL blocks, difference between procedure and function" },
+        ]
+      },
+      {
+        id: "transactions",
+        name: "Transaction Management & Concurrency",
+        notes: `
+          <p>A <strong>transaction</strong> is a group of SQL operations that must all succeed together or all fail together.</p>
+          <p><strong>Example:</strong> Bank transfer — deduct ₹500 from Account A AND add ₹500 to Account B. Both must happen, or neither.</p>
+          <p><strong>ACID Properties</strong> — the four rules every transaction must follow:</p>
+          <p>• <strong>Atomicity:</strong> All or nothing. Either ALL operations in the transaction succeed, or NONE do.<br>
+          • <strong>Consistency:</strong> The database always moves from one valid state to another valid state.<br>
+          • <strong>Isolation:</strong> Transactions don't interfere with each other. Each transaction sees a consistent snapshot.<br>
+          • <strong>Durability:</strong> Once a transaction is committed, changes are permanent — even after a crash.</p>
+          <div class="code-block">BEGIN TRANSACTION;
+  UPDATE accounts SET balance = balance - 500 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 500 WHERE id = 2;
+COMMIT;  -- both updates saved permanently
+
+-- If something goes wrong:
+ROLLBACK;  -- undo everything back to before BEGIN</div>
+          <p><strong>Concurrency Problems</strong> when multiple users access same data:</p>
+          <p>• <strong>Dirty Read:</strong> Reading uncommitted changes from another transaction<br>
+          • <strong>Non-repeatable Read:</strong> Reading the same row twice gives different results<br>
+          • <strong>Phantom Read:</strong> New rows appear between two identical queries</p>
+          <p><strong>Locking:</strong><br>
+          • <strong>Shared Lock (S):</strong> Multiple transactions can read, nobody can write<br>
+          • <strong>Exclusive Lock (X):</strong> Only one transaction can read AND write<br>
+          • <strong>Deadlock:</strong> Two transactions each waiting for the other's lock → both stuck forever</p>
+          <div class="code-block">-- Deadlock Example:
+-- T1 locks Row A, waits for Row B
+-- T2 locks Row B, waits for Row A
+-- → Both wait forever = DEADLOCK
+
+-- Prevention: Timeouts, lock ordering, Wait-Die, Wound-Wait schemes</div>
+          <p><strong>Timestamp Concurrency:</strong> Each transaction gets a timestamp. Older transactions have priority. If a younger transaction conflicts, it gets rolled back and restarted.</p>
+          <div class="tip-box">For exam: Memorise ACID. Know locking types. Understand that deadlock = circular waiting. Also know: Optimistic concurrency = check at commit time, not during execution.</div>
+        `,
+        subtopics: [
+          { id: "txn-1", title: "What is a Transaction?", desc: "Definition, why we need transactions, bank example" },
+          { id: "txn-2", title: "ACID Properties", desc: "Atomicity, Consistency, Isolation, Durability — with examples" },
+          { id: "txn-3", title: "COMMIT, ROLLBACK, SAVEPOINT", desc: "Transaction control commands" },
+          { id: "txn-4", title: "Concurrency Problems", desc: "Dirty read, non-repeatable read, phantom read" },
+          { id: "txn-5", title: "Locking (Shared & Exclusive)", desc: "Lock types, two-phase locking protocol" },
+          { id: "txn-6", title: "Deadlock — Detection & Prevention", desc: "Wait-Die, Wound-Wait, timeouts" },
+          { id: "txn-7", title: "Timestamp-Based Concurrency", desc: "Thomas write rule, timestamp ordering" },
+          { id: "txn-8", title: "Optimistic Concurrency Control", desc: "Check conflicts only at commit time" },
+        ]
+      }
+    ]
+  }
+];
+
+const roadmapData = [
+  { week: "Week 1", title: "Introduction & Types of DB", topics: ["Data vs Information", "What is DBMS?", "Advantages of DBMS", "Types of Databases"], yt: "Search: 'DBMS Introduction Gate Smashers'" },
+  { week: "Week 2", title: "ER Model & EER Model", topics: ["Entities, Attributes, Relationships", "Cardinality (1:1, 1:N, M:N)", "Drawing ER Diagrams", "EER: Generalisation & Specialisation"], yt: "Search: 'ER Diagram DBMS Gate Smashers'" },
+  { week: "Week 3", title: "Normalization", topics: ["Functional Dependencies", "1NF, 2NF, 3NF", "BCNF", "Denormalization"], yt: "Search: 'Normalization DBMS Jenny Lectures'" },
+  { week: "Week 4", title: "Basic SQL", topics: ["SELECT, WHERE, ORDER BY", "GROUP BY, HAVING", "Aggregate Functions", "Joins (INNER, LEFT, RIGHT)"], yt: "Search: 'SQL Full Course freeCodeCamp'" },
+  { week: "Week 5", title: "Advanced SQL", topics: ["CREATE TABLE with constraints", "ALTER, DROP", "Views", "Stored Procedures & Functions"], yt: "Search: 'Advanced SQL Tutorial CodeWithHarry'" },
+  { week: "Week 6", title: "Transactions & Concurrency", topics: ["ACID Properties", "COMMIT / ROLLBACK", "Locking methods", "Deadlocks & Timestamps"], yt: "Search: 'Transaction Management Gate Smashers'" },
+  { week: "Week 7", title: "Revision & Practice", topics: ["Past question papers", "SQL query practice", "ER diagram exercises", "MCQ practice"], yt: "Search: 'DBMS Interview Questions Neso Academy'" },
+];
+
+const ytData = [
+  { channel: "Gate Smashers", topic: "DBMS Full Theory", search: "DBMS Full Course Gate Smashers", icon: "🎯" },
+  { channel: "Jenny's Lectures", topic: "Normalization", search: "Normalization in DBMS Jenny Lectures", icon: "📐" },
+  { channel: "freeCodeCamp", topic: "SQL Full Course", search: "SQL Tutorial Full Course freeCodeCamp", icon: "💻" },
+  { channel: "CodeWithHarry", topic: "SQL in Hindi", search: "SQL Tutorial Hindi CodeWithHarry", icon: "🇮🇳" },
+  { channel: "Neso Academy", topic: "DBMS Complete", search: "Database Management System Neso Academy", icon: "🏛" },
+  { channel: "Kudvenkat", topic: "Advanced SQL Server", search: "SQL Server Tutorial Kudvenkat", icon: "⚡" },
+  { channel: "Apna College", topic: "DBMS for Exams", search: "DBMS Apna College Hindi", icon: "🎓" },
+  { channel: "Abdul Bari", topic: "Relational Algebra", search: "Relational Algebra DBMS Abdul Bari", icon: "🔢" },
+];
+
+// ===================== STATE =====================
+let state = {};
+
+function loadState() {
+  try {
+    state = JSON.parse(localStorage.getItem('dbms_tracker') || '{}');
+  } catch(e) { state = {}; }
+}
+
+function saveState() {
+  localStorage.setItem('dbms_tracker', JSON.stringify(state));
+}
+
+// ===================== RENDER =====================
+function render() {
+  loadState();
+  renderNotes();
+  renderRoadmap();
+  renderYT();
+  updateOverallProgress();
+}
+
+function renderNotes() {
+  const container = document.getElementById('units-container');
+  container.innerHTML = '';
+
+  curriculum.forEach(unit => {
+    const section = document.createElement('div');
+    section.className = 'unit-section';
+    section.id = 'section-' + unit.id;
+
+    const unitDone = unit.topics.filter(t => state[t.id + '_topic']).length;
+    const unitTotal = unit.topics.length;
+    const unitPct = unitTotal ? Math.round(unitDone / unitTotal * 100) : 0;
+
+    section.innerHTML = `
+      <div class="unit-header" onclick="toggleUnit('${unit.id}')">
+        <div class="unit-icon ${unit.iconClass}">${unit.icon}</div>
+        <div class="unit-title-block">
+          <div class="unit-title">${unit.title}</div>
+          <div class="unit-subtitle">${unit.subtitle} · ${unit.hours}</div>
+        </div>
+        <div class="unit-progress-mini">
+          <div class="mini-bar"><div class="mini-bar-fill" id="mini-bar-${unit.id}" style="width:${unitPct}%"></div></div>
+          <div class="unit-pct-mini" id="mini-pct-${unit.id}">${unitPct}%</div>
+        </div>
+        <div class="chevron" id="chevron-${unit.id}">▾</div>
+      </div>
+      <div class="unit-body" id="body-${unit.id}">
+        ${unit.topics.map(topic => renderTopic(topic)).join('')}
+      </div>
+    `;
+    container.appendChild(section);
+  });
+}
+
+function renderTopic(topic) {
+  const isDone = !!state[topic.id + '_topic'];
+  return `
+    <div class="topic" id="topic-wrap-${topic.id}">
+      <div class="topic-header">
+        <div class="topic-check ${isDone ? 'checked' : ''}" id="check-${topic.id}" onclick="toggleTopic(event, '${topic.id}')">
+          ${isDone ? '✓' : ''}
+        </div>
+        <div class="topic-name ${isDone ? 'done' : ''}" id="name-${topic.id}" onclick="toggleNotes('${topic.id}')" style="cursor:pointer">${topic.name}</div>
+        <div class="topic-expand" onclick="toggleNotes('${topic.id}')">📖 Notes</div>
+      </div>
+      <div class="notes-panel" id="notes-${topic.id}">
+        <div class="notes-inner">
+          <h3>Study Notes</h3>
+          <div class="note-content">${topic.notes}</div>
+          <h3 style="margin-top:24px">Subtopics — tick off as you complete them</h3>
+          <div class="subtopics-list">
+            ${topic.subtopics.map(s => {
+              const subDone = !!state[s.id];
+              return `
+                <div class="subtopic-item" id="subwrap-${s.id}">
+                  <div class="subtopic-check ${subDone ? 'checked' : ''}" id="subcheck-${s.id}" onclick="toggleSubtopic('${topic.id}', '${s.id}')">
+                    ${subDone ? '✓' : ''}
+                  </div>
+                  <div class="subtopic-text">
+                    <div class="subtopic-title ${subDone ? 'done' : ''}" id="subtitle-${s.id}">${s.title}</div>
+                    <div class="subtopic-desc">${s.desc}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRoadmap() {
+  const c = document.getElementById('roadmap-container');
+  c.innerHTML = roadmapData.map(w => `
+    <div class="week-card">
+      <div class="week-num">${w.week}</div>
+      <div class="week-title">${w.title}</div>
+      <ul class="week-topics-list">${w.topics.map(t => `<li>${t}</li>`).join('')}</ul>
+      <div class="week-yt">${w.yt}</div>
+    </div>
+  `).join('');
+}
+
+function renderYT() {
+  const c = document.getElementById('yt-container');
+  c.innerHTML = ytData.map(y => `
+    <div class="yt-card">
+      <div class="yt-icon">${y.icon}</div>
+      <div class="yt-channel">${y.channel}</div>
+      <div class="yt-topic">${y.topic}</div>
+      <div class="yt-search">${y.search}</div>
+    </div>
+  `).join('');
+}
+
+// ===================== INTERACTIONS =====================
+function toggleUnit(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chevron-' + id);
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+function toggleNotes(topicId) {
+  const panel = document.getElementById('notes-' + topicId);
+  panel.classList.toggle('open');
+}
+
+function toggleTopic(e, topicId) {
+  e.stopPropagation();
+  const key = topicId + '_topic';
+  state[key] = !state[key];
+  saveState();
+
+  const check = document.getElementById('check-' + topicId);
+  const name = document.getElementById('name-' + topicId);
+  check.classList.toggle('checked', !!state[key]);
+  check.textContent = state[key] ? '✓' : '';
+  name.classList.toggle('done', !!state[key]);
+
+  updateUnitProgress();
+  updateOverallProgress();
+
+  if (state[key]) showToast('✓ Topic marked complete!');
+}
+
+function toggleSubtopic(topicId, subId) {
+  state[subId] = !state[subId];
+  saveState();
+
+  const check = document.getElementById('subcheck-' + subId);
+  const title = document.getElementById('subtitle-' + subId);
+  check.classList.toggle('checked', !!state[subId]);
+  check.textContent = state[subId] ? '✓' : '';
+  title.classList.toggle('done', !!state[subId]);
+
+  // Auto-complete topic if all subtopics done
+  const topic = curriculum.flatMap(u => u.topics).find(t => t.id === topicId);
+  if (topic) {
+    const allDone = topic.subtopics.every(s => !!state[s.id]);
+    if (allDone && !state[topicId + '_topic']) {
+      state[topicId + '_topic'] = true;
+      saveState();
+      const check2 = document.getElementById('check-' + topicId);
+      const name = document.getElementById('name-' + topicId);
+      if (check2) { check2.classList.add('checked'); check2.textContent = '✓'; }
+      if (name) name.classList.add('done');
+      showToast('🎉 All subtopics done — topic auto-completed!');
+    }
+  }
+
+  updateUnitProgress();
+  updateOverallProgress();
+  if (state[subId] && !document.querySelector('#toast.show')) showToast('Subtopic checked off ✓');
+}
+
+function updateUnitProgress() {
+  curriculum.forEach(unit => {
+    const done = unit.topics.filter(t => state[t.id + '_topic']).length;
+    const total = unit.topics.length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const bar = document.getElementById('mini-bar-' + unit.id);
+    const pctEl = document.getElementById('mini-pct-' + unit.id);
+    if (bar) bar.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+  });
+}
+
+function updateOverallProgress() {
+  const allTopics = curriculum.flatMap(u => u.topics);
+  const allSubs = allTopics.flatMap(t => t.subtopics);
+
+  const topicDone = allTopics.filter(t => state[t.id + '_topic']).length;
+  const topicTotal = allTopics.length;
+  const subDone = allSubs.filter(s => state[s.id]).length;
+  const subTotal = allSubs.length;
+
+  const pct = topicTotal ? Math.round(topicDone / topicTotal * 100) : 0;
+
+  document.getElementById('overall-pct').textContent = pct + '%';
+  document.getElementById('overall-bar').style.width = pct + '%';
+  document.getElementById('stat-done').textContent = topicDone;
+  document.getElementById('stat-total').textContent = topicTotal;
+  document.getElementById('stat-sub-done').textContent = subDone;
+  document.getElementById('stat-sub-total').textContent = subTotal;
+
+  updateUnitProgress();
+}
+
+function resetProgress() {
+  if (confirm('Reset all progress? This cannot be undone.')) {
+    state = {};
+    saveState();
+    render();
+    showToast('Progress reset.');
+  }
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ===================== INIT =====================
+render();
+
+// Open first unit by default
+document.addEventListener('DOMContentLoaded', () => {});
+toggleUnit('unit1');
+</script>
+</body>
+</html>
